@@ -6,7 +6,7 @@ OPTIND=1         # Reset in case getopts has been used previously in the shell.
 
 # Fetch parameters from commandline
 
-while getopts ":vt:o:r:b:" opt; do
+while getopts ":vt:o:r:b:T:" opt; do
     case "$opt" in
     v)  verbose=1
         ;;
