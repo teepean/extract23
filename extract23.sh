@@ -18,15 +18,18 @@ while getopts ":vt:o:r:b:" opt; do
         ;;
     o)  OUTFILE=$OPTARG
         ;;
+    T)  THREADS=$OPTARG
+        ;;
     *)
         echo "======================================== EXTRACT23 ======================================="
         echo "Usage: "
-        echo "extract23.sh -b <sorted_hg19_bamfile.bam> -r <hg19_ref.fasta> [-t <23andMe_V3_hg19_ref.tab.gz>] [-o output.txt] [-v]"
+        echo "extract23.sh -b <sorted_hg19_bamfile.bam> -r <hg19_ref.fasta> [-t <23andMe_V3_hg19_ref.tab.gz>] [-o output.txt] [-T threads ] [-v]"
         echo "  Parameters:"
         echo "  -b The whole genome hg19 referenced, sorted and indexed BAM file. REQUIRED!"
         echo "  -r The hg19 reference file (downloaded to your computer and indexed with samtools index <ref.fasta>. REQUIRED!"
         echo "  -t The bgziped and tabix -s1 -b2 -e2 indexed translation database. Defaults to 23andMe_V3_hg19_ref.tab.gz"
         echo "  -o Output file name without the .zip suffix. Defaults to 23andMe_V3_hg19.txt"
+        echo "  -T Number of output compression threads to use"
         echo "  -v Verbose output."
         exit 0
         ;;
@@ -56,6 +59,11 @@ if [ -z "${OUTFILE}" ]; then
     OUTFILE="23andMe_V3_hg19.txt"
 fi
 
+if [ -z "${THREADS}" ]; then
+    echo "Using default number of threads"
+    THREADS="0"
+fi
+
 if [ -z "${verbose}" ]; then
     verbose=0
 fi
@@ -68,7 +76,8 @@ fi
 
 # The -l parameter requires mpileup to exactly pick the constellations at the SNP positions
 # without having to screen through the whole genome base by base.
-samtools mpileup -C 50 -v -l ${REF_23ANDME} -f ${REF} ${BAMFILE_SORTED} > 23andMe_raw.vcf.gz
+# samtools mpileup -R -B -q30 -Q30 -v -l ${REF_23ANDME} -f ${REF} ${BAMFILE_SORTED} > 23andMe_raw.vcf.gz
+bcftools mpileup --ignore-RG --threads $THREADS -B -q30 -Q30 -T ${REF_23ANDME} -f ${REF} ${BAMFILE_SORTED} -O z -o 23andMe_raw.vcf.gz
 tabix -p vcf 23andMe_raw.vcf.gz
 
 if [ ${verbose} -gt 0 ]; then
@@ -161,6 +170,7 @@ rm -f 23andMe_called.vcf.*
 rm -f 23andMe_annotated.vcf.*
 rm -f 23andMe_V3_hg19*.tab
 rm -f ${OUTFILE}
+
 
 
 
