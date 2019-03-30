@@ -77,7 +77,7 @@ fi
 # The -l parameter requires mpileup to exactly pick the constellations at the SNP positions
 # without having to screen through the whole genome base by base.
 # samtools mpileup -R -B -q30 -Q30 -v -l ${REF_23ANDME} -f ${REF} ${BAMFILE_SORTED} > 23andMe_raw.vcf.gz
-bcftools mpileup --ignore-RG --threads $THREADS -B -q30 -Q30 -T ${REF_23ANDME} -f ${REF} ${BAMFILE_SORTED} -O z -o 23andMe_raw.vcf.gz
+bcftools mpileup --ignore-RG --threads $THREADS -B -q30 -Q30 -T ${REF_23ANDME} -f ${REF} ${BAMFILE_SORTED} -O z -g -o 23andMe_raw.vcf.gz
 tabix -p vcf 23andMe_raw.vcf.gz
 
 if [ ${verbose} -gt 0 ]; then
@@ -86,7 +86,7 @@ fi
 
 
 # Now we call the SNPs from the raw mpileup data with the -m (mixed base) genotype caller
-bcftools call -O z -V indels -m -P 0 23andMe_raw.vcf.gz > 23andMe_called.vcf.gz
+bcftools call --threads $THREADS -O z -V indels -m -P 0 23andMe_raw.vcf.gz > 23andMe_called.vcf.gz
 tabix -p vcf 23andMe_called.vcf.gz
 
 if [ ${verbose} -gt 0 ]; then
@@ -95,7 +95,7 @@ fi
 
 
 # Here we annotate the SNP names (rs numbers) to each SNP position
-bcftools annotate -O z -a ${REF_23ANDME} -c CHROM,POS,ID 23andMe_called.vcf.gz > 23andMe_annotated.vcf.gz
+bcftools annotate --threads $THREADS -O z -a ${REF_23ANDME} -c CHROM,POS,ID 23andMe_called.vcf.gz > 23andMe_annotated.vcf.gz
 tabix -p vcf 23andMe_annotated.vcf.gz
 
 if [ ${verbose} -gt 0 ]; then
