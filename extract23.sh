@@ -77,7 +77,8 @@ fi
 # The -l parameter requires mpileup to exactly pick the constellations at the SNP positions
 # without having to screen through the whole genome base by base.
 # samtools mpileup -R -B -q30 -Q30 -v -l ${REF_23ANDME} -f ${REF} ${BAMFILE_SORTED} > 23andMe_raw.vcf.gz
-bcftools mpileup --ignore-RG --threads $THREADS -C 50 -T ${REF_23ANDME} -f ${REF} ${BAMFILE_SORTED} -O z -x -o 23andMe_raw.vcf.gz
+samtools view -H ${BAMFILE_SORTED} | /bin/sed -e 's/SN:\([0-9XY]\)/SN:chr\1/' -e 's/SN:MT/SN:chrM/' | /bin/samtools reheader - ${BAMFILE_SORTED} > bam_tmp.bam
+samtools mpileup -C 50 -v -l ${REF_23ANDME} -f ${REF} bam_tmp.bam > 23andMe_raw.vcf.gz
 tabix -p vcf 23andMe_raw.vcf.gz
 
 if [ ${verbose} -gt 0 ]; then
